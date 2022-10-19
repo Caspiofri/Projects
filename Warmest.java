@@ -17,7 +17,7 @@ public class Warmest<K,V> {
 		
 	private Entry<K, V>[] table; //setting an array of Entry
 	private int capacity = 16; //capacity of the modify	LinkedList<Entry> hotElement = new LinkedList();
-	private Node<K,V> head = null ; 
+	private Node<K,V> head = null ; //head of the Hot element list
 	
 	class Entry<K, V>{ //Entry class -setting the key-node pairs
 		
@@ -84,8 +84,7 @@ public class Warmest<K,V> {
 		}
 
 	public Warmest() {
-		table = new Entry[capacity];
-		//Represent the head and tail of the singly linked list    
+		table = new Entry[capacity];  
 	}
 
 	public void put (K newKey, V newValue) {
