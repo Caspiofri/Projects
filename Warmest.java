@@ -1,4 +1,5 @@
 package question2;
+import java.util.HashMap; 
 
 class Node<K,V>
 	{  
@@ -10,182 +11,89 @@ class Node<K,V>
 	    public Node(K key,V value) {
 	    	this.key = key;
 	    	this.value = value; 	
-	    }
+	    }    
+	    
 	}
       
 public class Warmest<K,V> {
 		
-	private Entry<K, V>[] table; //setting an array of Entry
-	private int capacity = 16; //capacity of the modify	LinkedList<Entry> hotElement = new LinkedList();
-	private Node<K,V> head = null ; //head of the Hot element list
-	
-	class Entry<K, V>{ //Entry class -setting the key-node pairs
-		
-		K key;
-		Node<K, V> hotElement;
-		Entry<K, V> next;
-		
-		public Entry(K key ,V value , Entry<K, V> next) {
-			this.key = key;
-			this.hotElement = new Node<K,V>(key,value);
-			this.next = next;
-			}
-		
-			public K getKey() {
-				return key;
-			}
-			public void setKey(K key) {
-				this.key =  key;
-			}
-			public V getValue() {
-				return hotElement.value ;
-			}
-		
-			public void setValue(V value) {
-				this.hotElement.value = value;
-			}
-			
-			public void setNode(K key,V value) {
-				this.hotElement.key = key;
-				this.hotElement.value = value;
-			}
-			
-			public Entry<K, V> getNext() {
-				return next;
-			}
-			public void setNext(Entry<K, V> next) {
-				this.next = next;
-			}	
-		
-			public void insertNode(Node node) {
-				if (head == null)
-					head = node;
-				else {
-				head.prevN = node;
-				node.nextN = head;
-				head = node;
-				node.prevN = null;
-				}	
-			}
-			
-			public void removeNode(Node node) {
-				if (head != node) {
-					node.nextN.prevN = node.prevN;
-					node.prevN.nextN = node.nextN;
-				}
-				else if (node.nextN != null) {
-					node.nextN.prevN = null;
-					head = node.nextN;
-				}
-				else
-					head =null;			
-			}	
-			
-		}
+	HashMap<K, Node<K,V>> map = new HashMap<K,Node<K,V>>();
+	private Node<K,V> head = new Node(null, null); 
+	private Node<K,V> tail  = new Node(null, null); 
 
-	public Warmest() {
-		table = new Entry[capacity];  
-	}
-
-	public void put (K newKey, V newValue) {
-		
-		if (newKey == null) {
-			return; //avoiding storing null.
-		}
-		//calculating index of key.
-		int index = newKey.hashCode() % capacity; 
-		 // creating new entry with the new key and value.
-		Entry<K, V> newEntry = new Entry<K, V>(newKey,newValue,null);
-		if (table[index] == null) {
-			table[index] =  newEntry; //if the index in table doesn't contain any entry - store entry in index.
-			newEntry.setNode(newKey, newValue);
-			newEntry.insertNode(newEntry.hotElement);
-				
-		}
-		else { //if the key already in the list - change its value.
-			Entry<K, V> previous = null;
-			Entry<K, V> current = table[index];
-			
-			while(current != null) {
-				if (current.getKey().equals(newKey)) {
-					current.setValue(newValue);
-					//deleting the hotElement from the list
-					current.removeNode(current.hotElement);
-					current.insertNode(current.hotElement);
-					break;
-				}
-				previous = current;
-				current = current.getNext();
+   public void insertNode(Node node) {
+			if (head.nextN == null ) {
+				head.nextN = node;
+				tail.prevN = node;
+				node.nextN =tail;
+				node.prevN = head;
 			}
-			//creating new slot for the next pair
-			if (previous != null)
-				previous.setNext(newEntry);			
+			else { 
+				head.nextN.prevN = node;
+				head.nextN.prevN.nextN = head.nextN;
+				head.nextN = node;
+				head.nextN.prevN = head;
+			}	
+		}
+		
+		public void removeNode(Node node) {
+			if (head.nextN == null ) 
+				return;
+			if (node.nextN == null)
+				head.nextN =tail.prevN;
+			else {
+				node.nextN.prevN = node.prevN;
+				node.prevN.nextN = node.nextN;			
+			}
 		}	
-	}
-
-	public V get(K key) {
-		
-		V value = null;
-		//calculating index of key.
-		int index = key.hashCode() % capacity;
-		Entry<K, V> entry = table[index];
-		while (entry != null) {
-			if (entry.getKey().equals(key)) {
-				value = entry.getValue();
-				//removing node from list 
-				entry.removeNode(entry.hotElement);
-				//inserting node at the head of the list 
-				entry.insertNode(entry.hotElement);
-				break;
-			}
-			entry = entry.getNext();
+		    
+	public void put (K newKey, V newValue) {
+		Node node = new Node<K,V>(newKey,newValue);
+		if (map.containsKey(newKey)){
+			node = map.get(newKey);
+			removeNode(node);
+			node.value = newValue;
+			insertNode(node);
 		}
-		return value;
+		else
+			insertNode(node);
+		map.put(newKey, node);
+	}
+		
+	public V get(K key) {
+		Node node = map.get(key);
+		if (node== null)
+			return null;
+		removeNode(node);
+		insertNode(node);
+		return (V) node.value;
 	}
 	
 	public V remove(K key) {
-		//calculating index of key.
-		int index = key.hashCode() % capacity;
-		Entry<K, V> previous = null;
-		Entry<K, V> entry = table[index];
-		if(entry == null)
+		Node node = map.get(key);
+		if (node== null)
 			return null;
-		V value = entry.getValue();
-		//deleting the hotElement from the list
-		entry.removeNode(entry.hotElement);
-		
-		while(entry != null) {
-			if(entry.getKey().equals(key)) {
-				if (previous == null) {
-					entry = entry.getNext();
-					table[index] = entry;
-					break;
-				}else {
-					previous.setNext(entry.getNext());
-					break;
-				}	
-			}
-			previous = entry;
-			entry = entry.getNext();
-		}
-		return value;
+		removeNode(node);
+		map.remove(key);
+		return (V) node.value;
 	}
-		
-		
+				
 	public V getWarmest() {
-		if (head == null)
+		if (head.nextN == null)
 			return null;
-		return head.value;
+		return head.nextN.value;
 	}
 	
-	public void printList() {
-		if (head == null)
+	/*public void printList() {
+		if (head.nextN == null)
 			System.out.println("empty");
-		Node element = head;
+		Node element = head.nextN;
 		while (element!=null) {
 			System.out.println(element.key);
 			element = element.nextN;
 		}
-		
-	}
+		System.out.println("-----------------------");
+	}*/
 }
+
+
