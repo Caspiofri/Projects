@@ -6,14 +6,12 @@ public class Warmest<K,V> {
 	private int capacity = 16; //capacity of the modify	LinkedList<Entry> hotElement = new LinkedList();
 	
 	public Node head = null ; 
-	public Node tail = null ; 
 	
 	class Node{    
 	    K data;    
         Node nextN;  
         Node prevN;  
      
-		// אני לא משתמשת בכל הסטרים\גטרים האלה.. שווה להשאיר ולנסות לעשות בהם שימוש בקוד או למחוק?
 	     public Node(K data) {    
 	         this.data = data;    
 	     } 
@@ -76,7 +74,7 @@ public class Warmest<K,V> {
 			this.value = value;
 		}
 		
-		public Entry getNext() {
+		public Entry<K, V> getNext() {
 			return next;
 		}
 		public void setNext(Entry<K, V> next) {
@@ -122,9 +120,16 @@ public class Warmest<K,V> {
 		//calculating index of key.
 		int index = newKey.hashCode() % capacity; 
 		 // creating new entry with the new key and value.
-		Entry<K, V> newEntry = new Entry(newKey,newValue,null);
+		Entry<K, V> newEntry = new Entry<K, V>(newKey,newValue,null);
 		if (table[index] == null) {
 			table[index] =  newEntry; //if the index in table doesn't contain any entry - store entry in index.
+			newEntry.hotElement = new Node(newKey);
+			if (head == null) {
+				head = newEntry.hotElement;
+			}
+			else {
+				newEntry.insertNode(newEntry);
+			}		
 			
 		}
 		else { //if the key already in the list - change its value.
@@ -134,6 +139,9 @@ public class Warmest<K,V> {
 			while(current != null) {
 				if (current.getKey().equals(newKey)) {
 					current.setValue(newValue);
+					//deleting the hotElement from the list
+					current.removeNode(current);
+					current.insertNode(current);
 					break;
 				}
 				previous = current;
@@ -143,16 +151,7 @@ public class Warmest<K,V> {
 			if (previous != null)
 				previous.setNext(newEntry);			
 		}
-		newEntry.hotElement = new Node(newKey);
-		if (head == null) {
-			head = newEntry.hotElement;
-            tail = newEntry.hotElement;
-            //head.prevN = null;
-            //tail.nextN = null;
-		}
-		else {
-			newEntry.insertNode(newEntry);
-		}		
+		
 	}
 
 	public V get(K key) {
@@ -178,7 +177,7 @@ public class Warmest<K,V> {
 	public V remove(K key) {
 		//calculating index of key.
 		int index = key.hashCode() % capacity;
-		Entry previous = null;
+		Entry<K, V> previous = null;
 		Entry<K, V> entry = table[index];
 		if(entry == null)
 			return null;
