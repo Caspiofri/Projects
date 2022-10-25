@@ -19,7 +19,7 @@ class Node<K,V>
 	    	this.value = value; 
 	    	this.nextN = null; 
 	    	this.prevN = null; 
-	    }       
+	    }    	    
 	}
       
 public class Warmest<K,V> {
@@ -59,7 +59,7 @@ public class Warmest<K,V> {
 				node.nextN = next;
 			}
 		}	
-		    
+		
 	public void put (K newKey, V newValue) {
 		if (map.containsKey(newKey)){
 			Node node = map.get(newKey);
@@ -73,7 +73,15 @@ public class Warmest<K,V> {
 			map.put(newKey, node);
 		}
 	}
-		
+	
+	public Node getHead() {
+		return this.head;
+	}
+	
+	public Node getTail() {
+		return this.tail;
+	}
+	
 	public V get(K key) {
 		Node node = map.get(key);
 		if (node == null)
